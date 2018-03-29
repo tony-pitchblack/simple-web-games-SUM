@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hash Mash</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
+    <link rel="stylesheet" href="styles/home.css" type="text/css">
+  </head>
+  <body>
+    <section id='root' class="section">
+      <div class="container awesome-container">
+        <h1 class="title is-1">Hash Mash</h1>
+        <div class="field">
+          <div class="control is-expanded">
+            <div class="select is-fullwidth">
+              <select @change='findQuestion' v-model='test'>
+                <option>Тест</option>
+                <option>Операционные системы</option>
+                <option>ВС и сети</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="control is-expanded">
+            <button class="button is-fullwidth" @click='show("question-form")' :disabled="test == 'Тест'">Новый вопрос</button>
+          </div>
+        </div>
+        <div id='question-form' class="modal">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Новый вопрос</p>
+              <button class="delete" aria-label="close" @click="hide('question-form'); findQuestion()"></button>
+            </header>
+            <section class="modal-card-body">
+              <div class="field">
+                <input class="input" type="text" placeholder="Вопрос" v-model='newQuestion.name'>
+              </div>
+              <div class="field">
+                <div class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select v-model='newQuestion.type'>
+                      <option>Тип ответа</option>
+                      <option>Один вариант</option>
+                      <option>Несколько вариантов</option>
+                      <option>Развернутый</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div v-if="newQuestion.type == 'Один вариант' || newQuestion.type == 'Несколько вариантов'">
+                <variant v-for='(variant, index) in newQuestion.variants' :name='variant' @remove='newQuestion.variants.splice(index, 1)'></variant>
+                <div class="field has-addons">
+                  <div class="control is-expanded">
+                    <input class="input" type="text" placeholder="Вариант" v-model='newVariant'>
+                  </div>
+                  <div class="control">
+                    <a class="button" @click='addNewVariant'>Добавить</a>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button :class="['button', 'is-success', { 'is-loading': mainButtonLoading } ]" :disabled="newQuestion.name == '' || newQuestion.type == 'Тип ответа' || (newQuestion.type == 'Один вариант' || newQuestion.type == 'Несколько вариантов') && (newQuestion.variants.length == 0)" @click='createNewQuestion'>Создать</button>
+              <button class="button is-fullwidth is-static" v-if='createStatus'>{{ createStatus }}</button>
+            </footer>
+          </div>
+        </div>
+        <div class="field">
+          <div class="control is-expanded">
+            <input class="input" type="text" placeholder="Найти вопрос" @focus='findQuestion' @input='findQuestion' v-model='searchQuery'>
+          </div>
+        </div>
+        <div class="questions">
+          <button class="button my-button is-fullwidth" v-for='(question, index) in foundQuestions' @click='selectQuestion(index)' :class="{'is-primary': question.trueVariant, 'is-danger': question.deleted}">
+            {{ question.name }}
+          </button>
+        </div>
+      </div>
+      <div id='question' class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-card" v-if='selectedQuestion'>
+          <header class="modal-card-head">
+            <p class="modal-card-title special-heading">{{ selectedQuestion.name }}</p>
+            <button class="delete special-cross" aria-label="close" @click="hideQuestion();"></button>
+          </header>
+          <section class="modal-card-body">
+            <div>
+              <article class="message is-primary" v-if='selectedQuestion.trueVariant != null'>
+                <div class="message-header">
+                  <p>Правильный ответ</p>
+                  <button class="delete" :disabled='crossLoading' aria-label="delete" @click='deleteTrueVariant'></button>
+                </div>
+                <div class="message-body">{{ selectedQuestion.variantsMarked[selectedQuestion.trueVariant].name }}</div>
+              </article>
+              <div class="field">
+                <div class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select v-model='choosedVariant'>
+                      <option>Ответы</option>
+                      <option v-if="selectedQuestion.type != 'Развернутый'" disabled>Х.З.</option>
+                      <option v-for='(variant, index) in selectedQuestion.variantsMarked' v-if='variant.status == null' :value='index'>{{ variant.name }}</option>
+                      <option disabled>НЕПРАВИЛЬНЫЕ</option>
+                      <option v-for='(variant, index) in selectedQuestion.variantsMarked' v-if='variant.status == false' :value='index'>{{ variant.name }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="field has-addons">
+                <div class="control is-expanded">
+                  <button class="button is-fullwidth" :class="{'is-loading': leftButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='deleteVariant'>Удалить</button>
+                </div>
+                <div class="control is-expanded">
+                  <button class="button is-fullwidth" :class="{'is-loading': rightButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='markTrueVariant'>Правильный</button>
+                </div>
+              </div>
+              <div v-if="selectedQuestion.type == 'Несколько вариантов'">
+                <button class="button is-fullwidth my-button is-static" v-for='(variant, index) in selectedQuestion.variants'>
+                  {{ (index+1)+': '+variant}}
+                </button>
+              </div>
+              <div v-if="selectedQuestion.type == 'Развернутый'">
+                <div class="field has-addons">
+                  <div class="control is-expanded">
+                    <input class="input" type="text" placeholder="Вариант" v-model='newVariant'>
+                  </div>
+                  <div class="control">
+                    <a class="button" @click='attachNewVariant'>Добавить</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <footer class="modal-card-foot">
+            <button class="button" :disabled='mainButtonLoading' :class="{'is-danger': selectedQuestion.deleted != true, 'is-loading': mainButtonLoading, 'is-success': selectedQuestion.deleted}" @click='deleteOrRecoverQuestion'>{{ selectedQuestion.deleted ? 'Восстановить вопрос' : 'Удалить вопрос' }}</button>
+            <button class="button is-fullwidth is-static" v-if='createStatus'>{{ createStatus }}</button>
+          </footer>
+        </div>
+      </div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src='scripts/home.js'></script>
+  </body>
+</html>

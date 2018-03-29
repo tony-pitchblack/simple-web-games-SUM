@@ -1,0 +1,27 @@
+.my-button {
+  height: auto;
+  white-space: normal;
+  margin-bottom: .5rem;
+}
+
+.special-button {
+  height: 100%;
+}
+
+.questions {
+  overflow: scroll;
+}
+
+.special-heading {
+  height: auto;
+  white-space: normal;
+  flex-shrink: initial;
+}
+
+.special-cross {
+  margin-left: 1rem;
+}
+
+.awesome-container {
+  max-width: 500px;
+}

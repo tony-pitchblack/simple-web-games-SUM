@@ -1,1 +1,2 @@
-# tony-pitchblack.github.io
+# hashmash
+Hashing Mashuric
