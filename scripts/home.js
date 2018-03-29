@@ -92,7 +92,7 @@ var app = new Vue({
         variantsMarked: newVariantsMarked,
         objectID: this.selectedQuestion.objectID
       }, function (err) {
-        this.additionalButtonLoading = false
+        app.additionalButtonLoading = false
         if (!err){
           app.selectedQuestion.variantsMarked = newVariantsMarked
           app.choosedVariant = app.selectedQuestion.variantsMarked.length - 1

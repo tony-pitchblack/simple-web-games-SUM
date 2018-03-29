@@ -128,7 +128,7 @@
                     <input class="input" type="text" placeholder="Вариант" v-model='newVariant'>
                   </div>
                   <div class="control">
-                    <a class="button" @click='attachNewVariant'>Добавить</a>
+                    <button class="button" :class="{'is-loading': additionalButtonLoading}":disabled='additionalButtonLoading || newVariant.length == 0' @click='attachNewVariant'>Добавить</button>
                   </div>
                 </div>
               </div>
