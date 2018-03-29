@@ -111,7 +111,8 @@
               </div>
               <div class="field has-addons">
                 <div class="control is-expanded">
-                  <button class="button is-fullwidth" :class="{'is-loading': leftButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='deleteVariant'>Удалить</button>
+                  <button v-if="selectedQuestion.type != 'Развернутый'" class="button is-fullwidth" :class="{'is-loading': leftButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='deleteVariant'>Удалить</button>
+                  <button v-if="selectedQuestion.type == 'Развернутый'" class="button is-fullwidth" :class="{'is-loading': leftButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='markFalseOrNullVariant'>{{ selectedQuestion.variantsMarked[choosedVariant].status == false ? : 'Х.З. на самом деле' : 'Неправильный'}}</button>
                 </div>
                 <div class="control is-expanded">
                   <button class="button is-fullwidth" :class="{'is-loading': rightButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='markTrueVariant'>Правильный</button>
