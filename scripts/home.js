@@ -33,7 +33,7 @@ Vue.component('variant', {
   template: `
   <div class="field has-addons">
     <div class="control is-expanded">
-      <a class='button is-fullwidth my-button special-button'>{{ name }}</a>
+      <a class='button is-static is-fullwidth my-button special-button'>{{ name }}</a>
     </div>
     <div class="control">
       <a class="button is-danger my-button special-button" @click="$emit(\'remove\')">Удалить</a>
