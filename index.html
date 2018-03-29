@@ -92,7 +92,7 @@
               <article class="message is-primary" v-if='selectedQuestion.trueVariant != null'>
                 <div class="message-header">
                   <p>Правильный ответ</p>
-                  <button class="delete" :disabled='crossLoading' aria-label="delete" @click='deleteTrueVariant'></button>
+                  <button class="delete" :disabled='crossLoading || selectedQuestion.deleted' aria-label="delete" @click='deleteTrueVariant'></button>
                 </div>
                 <div class="message-body">{{ selectedQuestion.variantsMarked[selectedQuestion.trueVariant].name }}</div>
               </article>
