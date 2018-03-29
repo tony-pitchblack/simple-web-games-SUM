@@ -153,7 +153,6 @@ var app = new Vue({
           app.newVariant = ''
           app.newQuestion.variants = []
           app.newQuestion.variantsMarked = []
-          app.searchQuery = app.newQuestion.name
           app.newQuestion.name = ''
           app.newQuestion.type = 'Тип ответа'
           app.createStatus = 'Успешно'
