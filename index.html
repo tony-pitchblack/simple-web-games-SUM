@@ -23,11 +23,39 @@
             </div>
           </div>
         </div>
+
         <div class="field">
           <div class="control is-expanded">
             <button class="button is-fullwidth" @click='show("question-form")' :disabled="test == 'Тест'">Новый вопрос</button>
           </div>
         </div>
+
+        <!-- Текущие вопросы -->
+        <div class="field has-addons">
+          <div class="control is-expanded">
+            <button class="button is-fullwidth" @click='showingCurrent = !showingCurrent' :disabled="test == 'Тест'" :class="{'is-warning': showingCurrent }">Текущие вопросы</button>
+          </div>
+          <div class="control">
+            <button class="button" @click="show('current-questions-warning')" :disabled="test == 'Тест'">Очистить</button>
+          </div>
+        </div>
+        <div id='current-questions-warning' class="modal">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title special-heading">Очистить список текущих вопросов?</p>
+              <button @click="hide('current-questions-warning')" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+              Это действие НЕОБРАТИМО.
+            </section>
+            <footer class="modal-card-foot">
+              <button @click="clearCurrentQuestions" class="button is-danger">Очистить</button>
+              <button @click="hide('current-questions-warning')" class="button">Оставить</button>
+            </footer>
+          </div>
+        </div>
+
         <div id='question-form' class="modal">
           <div class="modal-background"></div>
           <div class="modal-card">
@@ -75,7 +103,7 @@
           </div>
         </div>
         <div class="questions">
-          <button class="button my-button is-fullwidth" v-for='(question, index) in foundQuestions' @click='selectQuestion(index)' :class="{'is-primary': question.trueVariant, 'is-danger': question.deleted}">
+          <button class="button my-button is-fullwidth" v-for='(question, index) in foundQuestions' @click='selectQuestion(index)' :class="{'is-primary': question.trueVariant != null, 'is-danger': question.deleted, 'is-warning': isCurrentQuestion(question.objectID) && question.trueVariant == null, 'is-outlined': isCurrentQuestion(question.objectID)}" v-if='!showingCurrent || isCurrentQuestion(question.objectID)'>
             {{ question.name }}
           </button>
         </div>
@@ -101,7 +129,7 @@
                   <div class="select is-fullwidth">
                     <select v-model='choosedVariant'>
                       <option>Ответы</option>
-                      <option v-if="selectedQuestion.type != 'Развернутый'" disabled>Х.З.</option>
+                      <option disabled>Х.З.</option>
                       <option v-for='(variant, index) in selectedQuestion.variantsMarked' v-if='variant.status == null' :value='index'>{{ variant.name }}</option>
                       <option disabled>НЕПРАВИЛЬНЫЕ</option>
                       <option v-for='(variant, index) in selectedQuestion.variantsMarked' v-if='variant.status == false' :value='index'>{{ variant.name }}</option>
@@ -111,18 +139,15 @@
               </div>
               <div class="field has-addons">
                 <div class="control is-expanded">
-                  <button v-if="selectedQuestion.type == 'Развернутый'" class="button is-fullwidth" :class="{'is-loading': leftButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='deleteVariant'>Удалить</button>
-                  <button v-if="selectedQuestion.type != 'Развернутый'" class="button is-fullwidth" :class="{'is-loading': leftButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='markFalseOrNullVariant'>{{ choosedVariant != 'Ответы' && selectedQuestion.variantsMarked[choosedVariant].status == false ? 'Х.З. на самом деле' : 'Неправильный'}}</button>
+                  <button class="button is-fullwidth" :class="{'is-loading': leftButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='markFalseOrNullVariant'>{{ choosedVariant != 'Ответы' && selectedQuestion.variantsMarked[choosedVariant].status == false ? 'Х.З. на самом деле' : 'Неправильный'}}</button>
                 </div>
                 <div class="control is-expanded">
                   <button class="button is-fullwidth" :class="{'is-loading': rightButtonLoading}" :disabled="choosedVariant == 'Ответы' || mainButtonLoading || leftButtonLoading || rightButtonLoading || crossLoading || selectedQuestion.deleted" @click='markTrueVariant'>Правильный</button>
                 </div>
               </div>
-              <div v-if="selectedQuestion.type == 'Несколько вариантов'">
-                <button class="button is-fullwidth my-button is-static" v-for='(variant, index) in selectedQuestion.variants'>
-                  {{ (index+1)+': '+variant}}
-                </button>
-              </div>
+              <button class="button is-fullwidth my-button is-static" v-for='(variant, index) in selectedQuestion.variants'>
+                {{ (index+1)+': '+variant}}
+              </button>
               <div v-if="selectedQuestion.type == 'Развернутый'">
                 <div class="field has-addons">
                   <div class="control is-expanded">
@@ -136,8 +161,14 @@
             </div>
           </section>
           <footer class="modal-card-foot">
-            <button class="button" :disabled='mainButtonLoading' :class="{'is-danger': selectedQuestion.deleted != true, 'is-loading': mainButtonLoading, 'is-success': selectedQuestion.deleted}" @click='deleteOrRecoverQuestion'>{{ selectedQuestion.deleted ? 'Восстановить вопрос' : 'Удалить вопрос' }}</button>
-            <button class="button is-fullwidth is-static" v-if='createStatus'>{{ createStatus }}</button>
+            <div class="field has-addons">
+              <div class="control">
+                <button class="button" :disabled='mainButtonLoading' :class="{'is-danger': selectedQuestion.deleted != true, 'is-loading': mainButtonLoading, 'is-success': selectedQuestion.deleted}" @click='deleteOrRecoverQuestion'>{{ selectedQuestion.deleted ? 'Восстановить' : 'Удалить' }}</button>
+              </div>
+              <div class="control">
+                <button class="button is-warning" :disabled="mainButtonLoading || ( choosedVariant == 'Ответы' && !isCurrentQuestion(selectedQuestion.objectID) )" :class="{ 'is-loading': secondMainButtonLoading}" @click='addOrRemoveQuestionFromCurrentList'>{{ isCurrentQuestion(selectedQuestion.objectID) ? 'Не текущий' : 'Текущий' }}</button>
+              </div>
+            </div>
           </footer>
         </div>
       </div>
