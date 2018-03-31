@@ -33,7 +33,7 @@
         <!-- Текущие вопросы -->
         <div class="field has-addons">
           <div class="control is-expanded">
-            <button class="button is-fullwidth" @click='showingCurrent = !showingCurrent' :disabled="test == 'Тест'" :class="{'is-warning': showingCurrent }">Текущие вопросы</button>
+            <button class="button is-fullwidth" @click='showingCurrent = !showingCurrent; findQuestion()' :disabled="test == 'Тест'" :class="{'is-warning': showingCurrent }">Текущие вопросы</button>
           </div>
           <div class="control">
             <button class="button" @click="show('current-questions-warning')" :disabled="test == 'Тест'">Очистить</button>
