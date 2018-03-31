@@ -356,7 +356,7 @@ var app = new Vue({
   mounted: function () {
     var currentQuestions = getCookie("currentQuestions")
     if (currentQuestions != ""){
-      app.currentQuestions = JSON.parse(currentQuestions)
+      this.currentQuestions = JSON.parse(currentQuestions)
     }
   }
 })
