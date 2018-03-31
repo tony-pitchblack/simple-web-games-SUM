@@ -11,15 +11,45 @@ function getDigit(digit, isSelected) {
   return digitSet[digit]
 }
 
+function search(arr, attr, val) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i][attr] == val){
+      return i
+    }
+  }
+  return -1
+}
+
+function setCookie(cname, cvalue, exdays=90) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+}
+
 function getVariants(baseVariants, i) {
   var variants = []
   if (i-- > 0){
     baseVariants.forEach(variant => {
-      console.log('variant: '+variant);
       [true, false].forEach(variantPart => {
         var newVariant = variant.slice(0)
         newVariant.push(variantPart)
-        console.log('- newVariant: '+newVariant);
         variants.push(newVariant)
       });
     })
@@ -49,12 +79,15 @@ Vue.component('variant', {
 var app = new Vue({
   el: '#root',
   data: {
+    showingCurrent: false,
+    currentQuestions: [],
     choosedVariant: 'Ответы',
     selectedQuestion: null,
     searchQuery: '',
     foundQuestions: [],
     createStatus: null,
     crossLoading: false,
+    secondMainButtonLoading: false,
     additionalButtonLoading: false,
     mainButtonLoading: false,
     leftButtonLoading: false,
@@ -109,7 +142,6 @@ var app = new Vue({
     },
     resetIndex: function () {
       index = client.initIndex('dev_hashmash');
-      console.log('Refreshed');
     },
     findQuestion: function () {
       this.resetIndex()
@@ -120,7 +152,6 @@ var app = new Vue({
         function searchDone(err, content) {
           if (err) throw err;
           app.foundQuestions = content.hits
-          console.log(content.hits);
         }
       )
     },
@@ -168,6 +199,10 @@ var app = new Vue({
     },
     selectQuestion: function (index) {
       app.selectedQuestion = app.foundQuestions[index]
+      var searchIndex = search(app.currentQuestions, 'objectID', app.selectedQuestion.objectID)
+      if (searchIndex != -1){
+        app.choosedVariant = app.currentQuestions[searchIndex]['choosedVariant']
+      }
       app.show('question')
     },
     hideQuestion: function () {
@@ -296,6 +331,32 @@ var app = new Vue({
           app.createStatus = null
         }, 1250)
       });
+    },
+    addOrRemoveQuestionFromCurrentList: function () {
+      var index = search(app.currentQuestions, 'objectID', app.selectedQuestion.objectID)
+      if (index != -1){
+        app.currentQuestions.splice(index, 1)
+      } else {
+        app.currentQuestions.push({
+          'objectID': app.selectedQuestion.objectID,
+          'choosedVariant': app.choosedVariant
+        })
+      }
+      setCookie("currentQuestions", JSON.stringify(app.currentQuestions))
+    },
+    isCurrentQuestion: function (objectID) {
+      return search(app.currentQuestions, 'objectID', objectID) != -1
+    },
+    clearCurrentQuestions: function () {
+      app.currentQuestions = []
+      app.hide('current-questions-warning')
+    }
+  },
+
+  mounted: function () {
+    var currentQuestions = getCookie("currentQuestions")
+    if (currentQuestions != ""){
+      app.currentQuestions = JSON.parse(currentQuestions)
     }
   }
 })
