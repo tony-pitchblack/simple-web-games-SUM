@@ -350,6 +350,8 @@ var app = new Vue({
     clearCurrentQuestions: function () {
       app.currentQuestions = []
       app.hide('current-questions-warning')
+      app.showingCurrent = false
+      app.findQuestion()
     }
   },
 
