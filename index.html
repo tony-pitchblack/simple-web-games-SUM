@@ -161,7 +161,7 @@
             </div>
           </section>
           <footer class="modal-card-foot">
-            <div class="field has-addons">
+            <div class="field is-grouped">
               <div class="control">
                 <button class="button" :disabled='mainButtonLoading' :class="{'is-danger': selectedQuestion.deleted != true, 'is-loading': mainButtonLoading, 'is-success': selectedQuestion.deleted}" @click='deleteOrRecoverQuestion'>{{ selectedQuestion.deleted ? 'Восстановить' : 'Удалить' }}</button>
               </div>
