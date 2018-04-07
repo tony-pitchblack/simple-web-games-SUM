@@ -166,7 +166,7 @@
                 <button class="button" :disabled='mainButtonLoading' :class="{'is-danger': selectedQuestion.deleted != true, 'is-loading': mainButtonLoading, 'is-success': selectedQuestion.deleted}" @click='deleteOrRecoverQuestion'>{{ selectedQuestion.deleted ? 'Восстановить' : 'Удалить' }}</button>
               </div>
               <div class="control">
-                <button class="button is-warning" :disabled="mainButtonLoading || ( choosedVariant == 'Ответы' && !isCurrentQuestion(selectedQuestion.objectID) )" :class="{ 'is-loading': secondMainButtonLoading}" @click='addOrRemoveQuestionFromCurrentList'>{{ isCurrentQuestion(selectedQuestion.objectID) ? 'Не текущий' : 'Текущий' }}</button>
+                <button class="button is-warning" :disabled="mainButtonLoading" :class="{ 'is-loading': secondMainButtonLoading}" @click='addOrRemoveQuestionFromCurrentList'>{{ isCurrentQuestion(selectedQuestion.objectID) ? 'Не текущий' : 'Текущий' }}</button>
               </div>
             </div>
           </footer>
